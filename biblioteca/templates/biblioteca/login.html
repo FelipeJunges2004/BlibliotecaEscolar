@@ -1,0 +1,25 @@
+﻿{% extends 'biblioteca/base.html' %}
+
+{% block title %}Login | Biblioteca Escolar{% endblock %}
+{% block page_title %}Acesso ao sistema{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <article class="auth-card">
+    <h2>Entrar</h2>
+    <p>Use seu nome de usuario e senha.</p>
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      {% for field in form %}
+        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+          <small class="field-error">{{ field.errors|join:', ' }}</small>
+        {% endif %}
+      {% endfor %}
+      <button type="submit" class="btn">Entrar</button>
+    </form>
+    <p class="muted">Sem conta? <a href="{% url 'cadastro' %}">Crie uma conta</a></p>
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,64 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Biblioteca Escolar{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+  <div class="app-shell {% if not user.is_authenticated %}no-sidebar{% endif %}">
+    {% if user.is_authenticated %}
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <h1>Biblioteca</h1>
+          <p>Gestao escolar</p>
+        </div>
+        <nav class="menu">
+          <a href="{% url 'dashboard' %}" class="menu-item">Meu painel</a>
+          {% if user.is_staff %}
+            <a href="{% url 'painel_admin' %}" class="menu-item">Area do Professor</a>
+            <a href="{% url 'admin:index' %}" class="menu-item">Gestao escolar</a>
+          {% endif %}
+        </nav>
+      </aside>
+    {% endif %}
+
+    <div class="main-area">
+      <header class="topbar">
+        {% if user.is_authenticated %}
+          <button class="menu-toggle" id="menu-toggle" type="button">Menu</button>
+        {% endif %}
+        <div class="topbar-title">{% block page_title %}Biblioteca Escolar{% endblock %}</div>
+
+        {% if user.is_authenticated %}
+          <div class="topbar-user">
+            <span class="user-pill">@{{ user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost">Sair</button>
+            </form>
+          </div>
+        {% endif %}
+      </header>
+
+      <main class="content">
+        {% if messages %}
+          <div class="alerts">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{% static 'app.js' %}"></script>
+</body>
+</html>
+
+

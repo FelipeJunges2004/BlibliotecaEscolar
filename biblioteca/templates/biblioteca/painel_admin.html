@@ -1,0 +1,189 @@
+﻿{% extends 'biblioteca/base.html' %}
+
+{% block title %}Area do Professor | Biblioteca Escolar{% endblock %}
+{% block page_title %}Area do Professor{% endblock %}
+
+{% block content %}
+<section class="stats-grid">
+  <article class="stat-card">
+    <p>Alunos cadastrados</p>
+    <h3>{{ total_alunos }}</h3>
+  </article>
+  <article class="stat-card stat-pendente">
+    <p>Livros pendentes</p>
+    <h3>{{ total_pendentes }}</h3>
+  </article>
+  <article class="stat-card stat-atrasado">
+    <p>Livros atrasados</p>
+    <h3>{{ total_atrasados }}</h3>
+  </article>
+  <article class="stat-card stat-devolvido">
+    <p>Livros devolvidos</p>
+    <h3>{{ total_devolvidos }}</h3>
+  </article>
+</section>
+
+<section class="charts-grid">
+  <article class="card">
+    <div class="card-head">
+      <h2>Retiradas por mes</h2>
+    </div>
+    <div class="bar-chart">
+      {% for item in grafico_retiradas_mes %}
+        <div class="bar-row">
+          <span>{{ item.label }}</span>
+          <div class="bar-track"><div class="bar-fill" style="width: {{ item.percentual }}%"></div></div>
+          <strong>{{ item.total }}</strong>
+        </div>
+      {% empty %}
+        <p class="empty">Sem dados.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-head">
+      <h2>Atrasos por serie</h2>
+    </div>
+    <div class="bar-chart">
+      {% for item in grafico_atraso_serie %}
+        <div class="bar-row">
+          <span>{{ item.label }}</span>
+          <div class="bar-track"><div class="bar-fill bar-fill-danger" style="width: {{ item.percentual }}%"></div></div>
+          <strong>{{ item.total }}</strong>
+        </div>
+      {% empty %}
+        <p class="empty">Sem dados.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-head">
+      <h2>Livros mais retirados</h2>
+    </div>
+    <div class="bar-chart">
+      {% for item in grafico_top_livros %}
+        <div class="bar-row">
+          <span title="{{ item.label }}">{{ item.label|truncatechars:20 }}</span>
+          <div class="bar-track"><div class="bar-fill bar-fill-ok" style="width: {{ item.percentual }}%"></div></div>
+          <strong>{{ item.total }}</strong>
+        </div>
+      {% empty %}
+        <p class="empty">Sem dados.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Filtros e busca</h2>
+    <p>Filtre por status, serie, nome do aluno, matricula e livro.</p>
+  </div>
+
+  <form method="get" class="filters" id="filtro-admin-form">
+    <div>
+      <label for="id_status">Status</label>
+      {{ form.status }}
+    </div>
+    <div>
+      <label for="id_serie">Serie</label>
+      {{ form.serie }}
+    </div>
+    <div>
+      <label for="id_aluno">Aluno</label>
+      {{ form.aluno }}
+    </div>
+    <div>
+      <label for="id_matricula">Matricula</label>
+      {{ form.matricula }}
+    </div>
+    <div>
+      <label for="id_livro">Livro</label>
+      {{ form.livro }}
+    </div>
+    <div>
+      <label for="id_ordenacao">Ordenar por</label>
+      {{ form.ordenacao }}
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn">Aplicar</button>
+      <button type="submit" name="export" value="pdf" class="btn btn-ghost-dark">Exportar PDF</button>
+      <a href="{% url 'painel_admin' %}" class="btn btn-ghost-dark">Limpar</a>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Retiradas registradas</h2>
+    <p>Total na pagina: {{ page_obj|length }} de {{ page_obj.paginator.count }}</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Aluno</th>
+          <th>Matricula</th>
+          <th>Serie</th>
+          <th>Livro</th>
+          <th>Retirada</th>
+          <th>Data limite</th>
+          <th>Status</th>
+          <th>Devolvido em</th>
+          <th>Confirmado por</th>
+          <th>Acao</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in page_obj %}
+          <tr>
+            <td>{{ item.aluno.first_name|default:'-' }}</td>
+            <td>{{ item.matricula_aluno }}</td>
+            <td>{{ item.serie_aluno }}</td>
+            <td>{{ item.nome_livro }}</td>
+            <td>{{ item.data_retirada|date:'d/m/Y' }}</td>
+            <td>{{ item.data_devolucao|date:'d/m/Y' }}</td>
+            <td>
+              <span class="badge badge-{{ item.status }}">{{ item.status|title }}</span>
+            </td>
+            <td>{% if item.data_devolucao_real %}{{ item.data_devolucao_real|date:'d/m/Y' }}{% else %}-{% endif %}</td>
+            <td>{% if item.confirmado_por %}{{ item.confirmado_por.username }}{% else %}-{% endif %}</td>
+            <td>
+              {% if not item.devolvido %}
+                <form method="post" action="{% url 'marcar_devolvido' item.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="btn btn-small">Marcar devolvido</button>
+                </form>
+              {% else %}
+                <span class="muted">Concluido</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="10" class="empty">Nenhum registro encontrado com os filtros atuais.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="{% if query_string %}?{{ query_string }}&page={{ page_obj.previous_page_number }}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}">Anterior</a>
+      {% endif %}
+
+      <span>Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="{% if query_string %}?{{ query_string }}&page={{ page_obj.next_page_number }}{% else %}?page={{ page_obj.next_page_number }}{% endif %}">Proxima</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}

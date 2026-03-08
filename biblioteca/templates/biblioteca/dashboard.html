@@ -1,0 +1,83 @@
+﻿{% extends 'biblioteca/base.html' %}
+
+{% block title %}Painel do Aluno | Biblioteca Escolar{% endblock %}
+{% block page_title %}Meu painel{% endblock %}
+
+{% block content %}
+<section class="stats-grid">
+  <article class="stat-card">
+    <p>Total de retiradas</p>
+    <h3>{{ total_retiradas }}</h3>
+  </article>
+  <article class="stat-card stat-pendente">
+    <p>Pendentes</p>
+    <h3>{{ total_pendentes }}</h3>
+  </article>
+  <article class="stat-card stat-atrasado">
+    <p>Atrasados</p>
+    <h3>{{ total_atrasados }}</h3>
+  </article>
+  <article class="stat-card stat-devolvido">
+    <p>Devolvidos</p>
+    <h3>{{ total_devolvidos }}</h3>
+  </article>
+</section>
+
+<section class="panel-grid">
+  <article class="card">
+    <div class="card-head">
+      <h2>Registrar retirada</h2>
+      <p>O prazo de devolucao e calculado automaticamente (+30 dias).</p>
+    </div>
+
+    <form method="post" id="emprestimo-form" class="form-grid">
+      {% csrf_token %}
+      {% for field in form %}
+        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+          <small class="field-error">{{ field.errors|join:', ' }}</small>
+        {% endif %}
+      {% endfor %}
+      <p id="previsao" class="hint"></p>
+      <button type="submit" class="btn">Salvar retirada</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="card-head">
+      <h2>Meus livros</h2>
+      <p>Somente seus registros aparecem aqui.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Livro</th>
+            <th>Retirada</th>
+            <th>Devolucao</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emprestimo in emprestimos %}
+          <tr>
+            <td>{{ emprestimo.nome_livro }}</td>
+            <td>{{ emprestimo.data_retirada|date:'d/m/Y' }}</td>
+            <td>{{ emprestimo.data_devolucao|date:'d/m/Y' }}</td>
+            <td>
+              <span class="badge badge-{{ emprestimo.status }}">{{ emprestimo.status|title }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="empty">Voce ainda nao registrou retiradas.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
